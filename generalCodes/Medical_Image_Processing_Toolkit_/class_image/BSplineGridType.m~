@@ -1,0 +1,86 @@
+classdef BSplineGridType < ImageType
+    % This class supports the BSpline interpolation
+    % over a region. Basically produces values via bspline interpolation in
+    % 3D
+    
+    %properties(GetAccess = 'public', SetAccess = 'public')
+    %end
+    
+    methods(Access = public)
+        %constructor
+        function obj = BSplineGridType(size,origin,spacing,orientation)
+            %obj = obj@ImageType(size,origin,spacing,orientation);
+            if (nargin==1)
+                % argument "size" is another images
+                obj = BSplineGridType(size.size,size.origin,size.spacing,size.orientation);
+            elseif(nargin > 0)
+                obj.size = size(:);
+                obj.spacing =  spacing(:);
+                obj.origin = origin(:);
+                obj.orientation = orientation;
+                obj.data = zeros(obj.size(1),obj.size(2),obj.size(3));
+                obj.paddingValue = [0 0 0];
+            end
+        end
+        
+       
+        function P = GetValue(obj, pos, varargin)
+            % get the pixel value (vector) at a non index position
+            % can use different interpolation schemes:
+            % im.GetValue(pos)  returns the value using nearest neighrbor
+            % interpolation
+            %   pos = world coordinates of the position where the value is
+            %   desired
+            % im.GetValue(pos, mode) uses the following interpolation
+            %   mode = 'NN'     nearest neighbor
+            %   mode = 'linear'    (tri) linear interpolation
+             P=obj.paddingValue;
+            mode = 'NN'; % NN
+            if  (size(varargin,2)>0)
+                mode = varargin{1};
+            end
+             
+             index = obj.GetContinuousIndex(pos);
+            
+            round_index = round(index);
+
+            % find the indexes inside the range
+
+            c1m = round_index(1,:)<1; c1M = round_index(1,:)>obj.size(1);
+            c2m = round_index(2,:)<1; c2M = round_index(2,:)>obj.size(2);
+            c3m = round_index(3,:)<1; c3M = round_index(3,:)>obj.size(3);
+
+            c_in = c1m | c1M | c2m | c2M | c3m | c3M;
+            
+             
+            if (strcmp(mode,'NN'))
+                round_index(:,c_in) = round_index(:,c_in)*0+1;
+                
+                in_1D = round_index(1,:)+ (round_index(2,:)-1)*obj.size(1) + (round_index(3,:)-1)*obj.size(1)*obj.size(2);
+               P = [obj.datax(in_1D);obj.datay(in_1D);obj.dataz(in_1D)];
+               %P = obj.data(index_in(1), index_in(2), index_in(3))
+               
+            elseif (strcmp(mode,'linear'))
+                 
+                index(:,c_in) = index(:,c_in)*0+1;                
+                P = obj.evaluate_at_point_linear(index);
+            end            
+           
+        end
+    end
+    methods(Access = private)
+        
+        function  value = evaluate_at_point_linear(obj,continuous_index)
+            % continuous_index is 3 x N
+         
+            valuex = interpn(obj.datax,continuous_index(1,:), continuous_index(2,:), continuous_index(3,:),'linear');
+            valuey = interpn(obj.datay,continuous_index(1,:), continuous_index(2,:), continuous_index(3,:),'linear');
+            valuez = interpn(obj.dataz,continuous_index(1,:), continuous_index(2,:), continuous_index(3,:),'linear');
+            
+            value = [valuex; valuey; valuez];
+            
+
+         end
+        
+    end
+end
