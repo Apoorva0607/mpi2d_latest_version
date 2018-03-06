@@ -1,0 +1,42 @@
+classdef image
+    % This class is compliant with itk::Image class
+    % by Alberto Gomez, 2011
+    properties(GetAccess = 'private', SetAccess = 'private')
+        size=[0 0 0]';
+        origin=[0 0 0]';
+        spacing= [1 1 1]';
+        orientation = eye(3); % orientation matrix (3 x 3)
+    end
+    
+    properties(GetAccess = 'private', SetAccess = 'private')
+         type = 0; % short(0), float(1), double(2), vector(3) ...
+    end
+    
+    methods
+        %constructor
+        function obj = image(size,origin,spacing,orientation,type)
+            if(nargin > 0)
+                obj.size = size;
+                obj.spacing =  spacing;
+                obj.origin = origin;
+                obj.orientation = orientation;
+                obj.type = type;
+            end
+        end
+        
+        function P = GetPoint(obj, index)
+            % get the position of a voxel at index "index", a 3 x 1 matrix
+            index = index(:);
+            P = obj.orientation *( (index-1).*obj.spacing+obj.origin);
+        end
+        
+        function S = GetSize(obj)
+            S = obj.size;
+        end
+        
+        function S = GetSpacing(obj)
+            S = obj.sp;
+        end
+        
+    end
+end
