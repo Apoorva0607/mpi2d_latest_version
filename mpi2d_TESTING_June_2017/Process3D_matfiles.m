@@ -23,7 +23,6 @@ askedForParFileOverwrite=0;
 %                image_data=double(abs(recon_data_inter));
 Image=Data.SystoleAIF;
    image_data=double(1e10.*abs(Image));
-
 if sum(size(Image))>470
     addon=0000;
     indexOfFoldersToDo = 1:size(image_data,3);
